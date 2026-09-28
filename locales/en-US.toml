@@ -1,0 +1,224 @@
+# meow-text localization resources (English)
+#
+# build.rs reads this file at compile time:
+#   - {{key}} placeholders in ui/index.html are replaced using the build default locale
+#   - ui/locale.js (generated) ships *every* locale to the frontend for runtime switching
+#   - src/i18n.rs (generated) turns each entry into a Rust constant (also runtime-switchable)
+# Adding a language = dropping another xx-YY.toml into locales/ (keys must match exactly).
+
+# Locale metadata: `name` is the endonym, shown as-is in every language
+[locale]
+name = "English"
+
+[nav]
+section = "Navigate"
+main = "Main"
+logs = "Logs"
+preferences = "Preferences"
+advanced = "Advanced"
+collapse = "Collapse navigation"
+expand = "Expand navigation"
+
+[language]
+label = "Language"
+system = "System ({name})"
+
+[app]
+window_title = "meow-text · Meow Control Panel"
+brand = "meow-text"
+logo = "M"
+html_lang = "en"
+tagline = "Appends “喵~” to messages you send in QQ"
+switch_title = "Master switch"
+switch_on = "On"
+switch_off = "Off"
+
+[theme]
+system = "System"
+light = "Light"
+dark = "Dark"
+group_label = "Theme"
+
+[status]
+hook_label = "Keyboard hook"
+hook_checking = "Checking…"
+hook_mounted = "Mounted"
+hook_failed = "Failed ({error})"
+hook_missing = "Not mounted"
+hook_preview = "Browser preview (Tauri not connected)"
+foreground = "{process}"
+foreground_label = "Foreground window"
+foreground_empty = "—"
+foreground_hit = "{process} (scenario match)"
+today = "Today"
+total = "Total"
+times = ""
+reset = "Reset"
+theme = "Theme: {name}"
+theme_system = "Theme: {name} (system)"
+no_tauri = "Tauri not connected"
+
+[main]
+status = "Current state"
+status_hint = "The master switch decides whether meowing happens at all; turn it off and every scenario stops."
+recent = "Recent events"
+recent_hint = "Only the newest few entries; the full list lives under “Logs”."
+open_logs = "Open full log"
+toggle_hint = "With the master switch off the hook stays installed but no input is touched."
+
+[preferences]
+hint = "Appearance, interface language and window behaviour. Everything applies immediately and saves itself."
+appearance = "Appearance"
+language = "Interface language"
+window = "Window"
+autostart = "Start at sign-in"
+autostart_hint = "Runs in the background after you sign in to Windows, sitting in the taskbar tray without opening the panel."
+autostart_on = "Registered: {command}"
+autostart_off = "Not registered"
+hotkey = "Toggle hotkey"
+hotkey_hint = "Click, then press a combination (needs at least one modifier, e.g. Ctrl+Alt+'). Esc cancels."
+hotkey_recording = "Recording: press the combination…"
+hotkey_reset = "Reset to default"
+hotkey_off = "Not set"
+hotkey_error_taken = "Another program already owns that combination — try another one"
+hotkey_error_format = "A hotkey needs at least one modifier (Ctrl / Alt / Shift / Win)"
+
+[advanced]
+hint = "Trigger, injection and scenario matching. Defaults are fine unless you know you need more."
+
+[settings]
+title = "Advanced settings"
+suffix = "Suffix"
+suffix_placeholder = "喵~"
+trigger = "Send key"
+inject_mode = "Injection"
+delay = "Delay (ms)"
+close_action = "On window close"
+require_content = "Skip when the input box is empty"
+skip_composing = "Leave Enter alone while the IME is composing"
+dry_run = "Dry run (log only, no injection)"
+
+[close_action]
+ask = "Ask every time"
+hide = "Hide to taskbar"
+quit = "Quit"
+
+[close]
+title = "Close meow-text?"
+body = "“Hide to taskbar” keeps meowing alive in the background; reopen this panel from the tray icon on the taskbar afterwards."
+hide = "Hide to taskbar"
+quit = "Quit"
+remember = "Don't ask again"
+
+[tray]
+tooltip = "meow-text · meowing is running"
+show = "Show panel"
+quit = "Quit meow-text"
+
+[trigger]
+enter = "Enter"
+ctrl_enter = "Ctrl+Enter"
+
+[mode]
+type = "Type text (recommended)"
+clipboard = "Paste via clipboard (fallback)"
+
+[scenarios]
+title = "Scenarios"
+hint = "A scenario is one kind of app to meow: it matches by process name (the name you see in Task Manager, e.g. <code>qq.exe</code>)."
+add = "+ Add app"
+col_processes = "Process names"
+col_suffix = "Suffix"
+col_trigger = "Send key"
+name_placeholder = "Name"
+processes_placeholder = "Process names, comma separated"
+suffix_placeholder = "Default {suffix}"
+trigger_default = "Use default"
+builtin = "Built-in"
+delete = "Remove"
+untitled = "Untitled"
+new_name = "New scenario"
+
+[selftest]
+title = "Self-test"
+hint = "Type a few characters in the box below and press <b>Enter</b>: “喵~” should show up before the newline. This never touches QQ, it only proves the hook and the injection path work."
+placeholder = "Click here → type → press Enter"
+
+[logs]
+title = "Logs"
+hint = "Every trigger, skip and failure lands here, newest first, with no length limit."
+inject_once = "Inject into focused window"
+clear = "Clear"
+empty = "No events yet. Type something in QQ and press Enter."
+config_path = "Config: {path} · Process: {process}"
+locale = "Locale: {locale}"
+
+[footer]
+quit = "Quit meow-text"
+hide = "Hide to background"
+ready = "Ready"
+saving = "Saving…"
+saved = "Saved {time}"
+save_failed = "Save failed: {error}"
+close_ask = "The × button asks first: hide to the taskbar or quit"
+close_hide = "The × button hides to the taskbar; meowing keeps running"
+close_quit = "The × button quits immediately and meowing stops"
+
+[log]
+system = "System"
+selftest = "Self-test"
+autostart_on = "Added to startup: {path}"
+autostart_off = "Removed from startup"
+autostart_synced = "The startup entry pointed somewhere else; updated it to this exe"
+autostart_failed = "Failed to change the startup entry: {error}"
+autostart_started = "Launched at sign-in, so the panel stays in the tray"
+hotkey_ready = "Hotkey ready: {hotkey} toggles the master switch"
+hotkey_failed = "Failed to register the hotkey: {error}"
+hotkey_on = "Hotkey set to {hotkey}"
+hotkey_off = "Hotkey turned off"
+hotkey_enabled = "Hotkey switched meowing on"
+hotkey_disabled = "Hotkey switched meowing off"
+hook_mounted = "Keyboard hook mounted, waiting for Enter in QQ"
+hook_failed = "Failed to install the keyboard hook: {error}"
+hook_unmounted = "Keyboard hook removed"
+hidden = "Hidden to the taskbar; meowing keeps running in the background"
+already_running = "Already running in the background — brought the panel back"
+skip = "Skipped: {reason}"
+focus_lost = "Cancelled: focus moved elsewhere"
+dry_run = "Dry run: send key detected, did not inject “{suffix}”"
+appended = "Appended “{suffix}”"
+type_failed = "Typing the suffix failed: {error}"
+appended_clipboard = "Appended “{suffix}” via the clipboard"
+clipboard_failed = "Clipboard injection failed: {error}"
+enter_failed = "Replaying the send key failed: {error}"
+selftest_ok = "Injected “{suffix}”"
+selftest_dry_run = "Dry run: skipped the real injection"
+selftest_failed = "Injection failed: {error}"
+
+[skip]
+disabled = "master switch is off"
+not_trigger = "not the send key"
+injected = "synthetic key from another program"
+no_scenario = "foreground process is not in any scenario"
+scenario_disabled = "that scenario is disabled"
+modifier = "modifier state does not match the send key"
+composing = "the IME is composing"
+empty_input = "the input box looks empty"
+
+[summary]
+line = "{state} · suffix {suffix} · {trigger} · {mode} · scenarios: {scenarios}"
+enabled = "enabled"
+disabled = "disabled"
+no_scenarios = "(none enabled)"
+
+[scenario.qq]
+name = "QQ"
+note = "Main process of QQNT / classic QQ"
+
+[scenario.tim]
+name = "TIM"
+note = "TIM shares QQ's engine; enable it separately"
+
+[scenario.wechat]
+name = "WeChat"
+note = "WeChat 4.x runs as weixin.exe"

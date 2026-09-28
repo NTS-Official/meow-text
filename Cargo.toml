@@ -1,0 +1,61 @@
+[package]
+name = "meow-text"
+version = "0.1.0"
+edition = "2024"
+description = "meow-text — 在 QQ 等应用里发送消息时自动补上「喵~」的 Windows 小工具"
+publish = false
+
+[lib]
+name = "meow_text_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "meow-text"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+serde_json = "1"
+toml = "1"
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+    "Win32_System_DataExchange",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
+    "Win32_System_Registry",
+    "Win32_System_SystemInformation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_UI_Input_Ime",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(windows)'.dev-dependencies]
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[dev-dependencies]
+toml = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

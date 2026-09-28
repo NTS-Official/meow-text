@@ -1,0 +1,304 @@
+<!doctype html>
+<!-- 布局照 WinUI 3 的 NavigationView：左边一列导航，右边一页内容。
+     首屏文案在编译时被 build.rs 替换成「默认语言」；data-i18n 属性让 main.js 能在运行时
+     换成别的语言（语言包全量打包在 locale.js 里，不用重新加载页面）。
+     动态生成的文字由 main.js 用 t() 查表，键名不在这里出现。 -->
+<html lang="{{app.html_lang}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{app.window_title}}</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <!-- ------------------------------------------------------ 导航栏 -->
+      <nav class="navpane" id="navpane">
+        <div class="nav-head">
+          <button
+            class="nav-toggle"
+            id="nav-toggle"
+            type="button"
+            data-i18n-title="nav.collapse"
+            title="{{nav.collapse}}"
+          >
+            <span class="nav-glyph" aria-hidden="true"></span>
+          </button>
+          <span class="logo" data-i18n="app.logo">{{app.logo}}</span>
+          <span class="brand" data-i18n="app.brand">{{app.brand}}</span>
+        </div>
+
+        <p class="nav-section" data-i18n="nav.section">{{nav.section}}</p>
+
+        <button class="nav-item" type="button" data-page="main" data-i18n-title="nav.main">
+          <span class="nav-icon" aria-hidden="true">◆</span>
+          <span class="nav-text" data-i18n="nav.main">{{nav.main}}</span>
+        </button>
+        <button class="nav-item" type="button" data-page="logs" data-i18n-title="nav.logs">
+          <span class="nav-icon" aria-hidden="true">≡</span>
+          <span class="nav-text" data-i18n="nav.logs">{{nav.logs}}</span>
+          <span class="nav-badge" id="logs-badge" hidden></span>
+        </button>
+        <button class="nav-item" type="button" data-page="preferences" data-i18n-title="nav.preferences">
+          <span class="nav-icon" aria-hidden="true">⚙</span>
+          <span class="nav-text" data-i18n="nav.preferences">{{nav.preferences}}</span>
+        </button>
+        <button class="nav-item" type="button" data-page="advanced" data-i18n-title="nav.advanced">
+          <span class="nav-icon" aria-hidden="true">⌥</span>
+          <span class="nav-text" data-i18n="nav.advanced">{{nav.advanced}}</span>
+        </button>
+
+        <span class="nav-spacer"></span>
+
+        <p class="nav-status" id="config-path"></p>
+      </nav>
+
+      <!-- ------------------------------------------------------ 内容区 -->
+      <div class="content">
+        <header class="page-head">
+          <h1 id="page-title" data-i18n="nav.main">{{nav.main}}</h1>
+          <span id="page-hint" data-i18n="app.tagline">{{app.tagline}}</span>
+        </header>
+
+        <main class="page-body">
+          <!-- ============================ 主面板：只有开关与状态 ============================ -->
+          <section class="page" data-page="main">
+            <div class="card switch-card">
+              <div class="switch-copy">
+                <h2 data-i18n="app.switch_title">{{app.switch_title}}</h2>
+                <p class="hint" data-i18n="main.status_hint">{{main.status_hint}}</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="enabled" />
+                <span class="track"><span class="knob"></span></span>
+                <span class="switch-text" id="enabled-text">{{app.switch_off}}</span>
+              </label>
+            </div>
+
+            <section class="card">
+              <div class="card-head">
+                <h2 data-i18n="main.status">{{main.status}}</h2>
+                <button class="ghost" id="reset-stats" data-i18n="status.reset">{{status.reset}}</button>
+              </div>
+              <div class="info-grid">
+                <div class="info">
+                  <span class="info-key" data-i18n="status.hook_label">{{status.hook_label}}</span>
+                  <span class="pill" id="hook-pill">{{status.hook_checking}}</span>
+                </div>
+                <div class="info">
+                  <span class="info-key" data-i18n="status.foreground_label">{{status.foreground_label}}</span>
+                  <span class="pill" id="fg-pill">{{status.foreground_empty}}</span>
+                </div>
+                <div class="info">
+                  <span class="info-key" data-i18n="status.today">{{status.today}}</span>
+                  <span class="info-value"><b id="stat-today">0</b><span data-i18n="status.times">{{status.times}}</span></span>
+                </div>
+                <div class="info">
+                  <span class="info-key" data-i18n="status.total">{{status.total}}</span>
+                  <span class="info-value"><b id="stat-total">0</b><span data-i18n="status.times">{{status.times}}</span></span>
+                </div>
+              </div>
+              <p class="hint" data-i18n="main.toggle_hint">{{main.toggle_hint}}</p>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h2 data-i18n="main.recent">{{main.recent}}</h2>
+                <button class="ghost" id="open-logs" data-i18n="main.open_logs">{{main.open_logs}}</button>
+              </div>
+              <p class="hint" data-i18n="main.recent_hint">{{main.recent_hint}}</p>
+              <ul id="logs-recent" class="logs"></ul>
+            </section>
+          </section>
+
+          <!-- ============================== 日志记录：完整记录 ============================== -->
+          <section class="page" data-page="logs" hidden>
+            <section class="card">
+              <div class="card-head">
+                <h2 data-i18n="logs.title">{{logs.title}}</h2>
+                <div class="row">
+                  <button class="ghost" id="inject-once" data-i18n="logs.inject_once">{{logs.inject_once}}</button>
+                  <button class="ghost" id="clear-log" data-i18n="logs.clear">{{logs.clear}}</button>
+                </div>
+              </div>
+              <ul id="logs" class="logs"></ul>
+              <p class="hint" id="config-path-detail"></p>
+            </section>
+          </section>
+
+          <!-- =============================== 偏好：外观 / 语言 / 窗口 =============================== -->
+          <section class="page" data-page="preferences" hidden>
+            <section class="card">
+              <h2 data-i18n="preferences.appearance">{{preferences.appearance}}</h2>
+              <div class="pref-row">
+                <div class="pref-copy">
+                  <span class="pref-label" data-i18n="theme.group_label">{{theme.group_label}}</span>
+                  <span class="hint" id="theme-summary"></span>
+                </div>
+                <div class="segmented" id="theme" role="group" aria-label="{{theme.group_label}}">
+                  <button type="button" data-theme-value="system" data-i18n="theme.system">{{theme.system}}</button>
+                  <button type="button" data-theme-value="light" data-i18n="theme.light">{{theme.light}}</button>
+                  <button type="button" data-theme-value="dark" data-i18n="theme.dark">{{theme.dark}}</button>
+                </div>
+              </div>
+              <div class="pref-row">
+                <div class="pref-copy">
+                  <span class="pref-label" data-i18n="preferences.language">{{preferences.language}}</span>
+                  <span class="hint" id="language-summary"></span>
+                </div>
+                <select id="language" data-i18n-title="language.label" title="{{language.label}}"></select>
+              </div>
+            </section>
+
+            <section class="card">
+              <h2 data-i18n="preferences.window">{{preferences.window}}</h2>
+              <div class="pref-row">
+                <div class="pref-copy">
+                  <span class="pref-label" data-i18n="settings.close_action">{{settings.close_action}}</span>
+                  <span class="hint" id="close-hint">{{footer.close_ask}}</span>
+                </div>
+                <select id="close-action">
+                  <option value="ask" data-i18n="close_action.ask">{{close_action.ask}}</option>
+                  <option value="hide" data-i18n="close_action.hide">{{close_action.hide}}</option>
+                  <option value="quit" data-i18n="close_action.quit">{{close_action.quit}}</option>
+                </select>
+              </div>
+              <div class="pref-row">
+                <div class="pref-copy">
+                  <span class="pref-label" data-i18n="preferences.autostart">{{preferences.autostart}}</span>
+                  <span class="hint" id="autostart-hint" data-i18n="preferences.autostart_hint">{{preferences.autostart_hint}}</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="autostart" />
+                  <span class="track"><span class="knob"></span></span>
+                </label>
+              </div>
+              <div class="pref-row">
+                <div class="pref-copy">
+                  <span class="pref-label" data-i18n="preferences.hotkey">{{preferences.hotkey}}</span>
+                  <span class="hint" id="hotkey-hint" data-i18n="preferences.hotkey_hint">{{preferences.hotkey_hint}}</span>
+                </div>
+                <div class="row">
+                  <input
+                    type="text"
+                    id="hotkey"
+                    class="hotkey-input"
+                    readonly
+                    spellcheck="false"
+                    data-i18n-placeholder="preferences.hotkey_off"
+                    placeholder="{{preferences.hotkey_off}}"
+                  />
+                  <button class="ghost" id="hotkey-default" data-i18n="preferences.hotkey_reset">{{preferences.hotkey_reset}}</button>
+                </div>
+              </div>
+              <div class="pref-row">
+                <div class="pref-copy">
+                  <span class="pref-label" data-i18n="footer.hide">{{footer.hide}}</span>
+                  <span class="hint" data-i18n="close.body">{{close.body}}</span>
+                </div>
+                <div class="row">
+                  <button class="ghost" id="hide" data-i18n="footer.hide">{{footer.hide}}</button>
+                  <button class="danger" id="quit" data-i18n="footer.quit">{{footer.quit}}</button>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <!-- ================================= 高级：触发 / 注入 / 场景 ================================= -->
+          <section class="page" data-page="advanced" hidden>
+            <section class="card">
+              <h2 data-i18n="settings.title">{{settings.title}}</h2>
+              <div class="grid">
+                <label class="field">
+                  <span data-i18n="settings.suffix">{{settings.suffix}}</span>
+                  <input
+                    type="text"
+                    id="suffix"
+                    maxlength="24"
+                    data-i18n-placeholder="settings.suffix_placeholder"
+                    placeholder="{{settings.suffix_placeholder}}"
+                  />
+                </label>
+                <label class="field">
+                  <span data-i18n="settings.trigger">{{settings.trigger}}</span>
+                  <select id="trigger">
+                    <option value="enter" data-i18n="trigger.enter">{{trigger.enter}}</option>
+                    <option value="ctrl_enter" data-i18n="trigger.ctrl_enter">{{trigger.ctrl_enter}}</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span data-i18n="settings.inject_mode">{{settings.inject_mode}}</span>
+                  <select id="inject-mode">
+                    <option value="type" data-i18n="mode.type">{{mode.type}}</option>
+                    <option value="clipboard" data-i18n="mode.clipboard">{{mode.clipboard}}</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span data-i18n="settings.delay">{{settings.delay}}</span>
+                  <input type="number" id="delay" min="0" max="2000" step="10" />
+                </label>
+              </div>
+              <div class="checks">
+                <label><input type="checkbox" id="require-content" /> <span data-i18n="settings.require_content">{{settings.require_content}}</span></label>
+                <label><input type="checkbox" id="skip-composing" /> <span data-i18n="settings.skip_composing">{{settings.skip_composing}}</span></label>
+                <label><input type="checkbox" id="dry-run" /> <span data-i18n="settings.dry_run">{{settings.dry_run}}</span></label>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h2 data-i18n="scenarios.title">{{scenarios.title}}</h2>
+                <button class="ghost" id="add-scenario" data-i18n="scenarios.add">{{scenarios.add}}</button>
+              </div>
+              <p class="hint" data-i18n="scenarios.hint">{{scenarios.hint}}</p>
+              <div class="scenario-labels" aria-hidden="true">
+                <span></span>
+                <span data-i18n="scenarios.name_placeholder">{{scenarios.name_placeholder}}</span>
+                <span data-i18n="scenarios.col_processes">{{scenarios.col_processes}}</span>
+                <span data-i18n="scenarios.col_suffix">{{scenarios.col_suffix}}</span>
+                <span data-i18n="scenarios.col_trigger">{{scenarios.col_trigger}}</span>
+                <span></span>
+              </div>
+              <div id="scenarios" class="scenarios"></div>
+            </section>
+
+            <section class="card">
+              <h2 data-i18n="selftest.title">{{selftest.title}}</h2>
+              <p class="hint" data-i18n="selftest.hint">{{selftest.hint}}</p>
+              <textarea
+                id="selftest"
+                data-i18n-placeholder="selftest.placeholder"
+                placeholder="{{selftest.placeholder}}"
+              ></textarea>
+            </section>
+          </section>
+        </main>
+
+        <footer class="statusbar">
+          <span class="hint" id="save-state">{{footer.ready}}</span>
+          <span class="spacer"></span>
+          <span class="hint" id="app-info"></span>
+        </footer>
+      </div>
+    </div>
+
+    <!-- 点 × 时的选择框；勾了「下次不再提示」就写进配置 -->
+    <div class="modal-backdrop" id="close-modal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="close-title">
+        <h3 id="close-title" data-i18n="close.title">{{close.title}}</h3>
+        <p data-i18n="close.body">{{close.body}}</p>
+        <label class="checks remember">
+          <input type="checkbox" id="close-remember" /> <span data-i18n="close.remember">{{close.remember}}</span>
+        </label>
+        <div class="modal-actions">
+          <button class="ghost" id="close-hide" data-i18n="close.hide">{{close.hide}}</button>
+          <button class="danger" id="close-quit" data-i18n="close.quit">{{close.quit}}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- locale.js 是 build.rs 生成的多语言表，必须先于 main.js 加载 -->
+    <script src="locale.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>

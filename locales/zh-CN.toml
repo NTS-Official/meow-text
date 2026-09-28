@@ -1,0 +1,224 @@
+# meow-text 本地化资源（简体中文）
+#
+# 这个文件在编译时被 build.rs 读取：
+#   - ui/index.html 里的 {{key}} 会被替换成这里的文本
+#   - ui/locale.js（自动生成）把整张表交给前端 JS 用
+#   - src/i18n.rs（自动生成）把每条文案变成 Rust 常量
+# 因此改完文案需要重新编译才会生效。加语言 = 在 locales/ 下放一份同名的 xx-YY.toml。
+
+# 语言包自己的元信息：name 是这门语言的自称，任何语言下都显示这个
+[locale]
+name = "简体中文"
+
+[nav]
+section = "导航"
+main = "主面板"
+logs = "日志记录"
+preferences = "偏好"
+advanced = "高级"
+collapse = "收起导航"
+expand = "展开导航"
+
+[language]
+label = "界面语言"
+system = "跟随系统（{name}）"
+
+[app]
+window_title = "喵化输出 · 配置"
+brand = "meow-text"
+logo = "喵"
+html_lang = "zh-CN"
+tagline = "在 QQ（其实不止） 里发消息，句尾自动补上「喵~」"
+switch_title = "总开关"
+switch_on = "已启用"
+switch_off = "已停用"
+
+[theme]
+system = "跟随系统"
+light = "白天"
+dark = "黑夜"
+group_label = "主题"
+
+[status]
+hook_label = "键盘钩子"
+hook_checking = "检测中…"
+hook_mounted = "已挂载"
+hook_failed = "挂载失败（{error}）"
+hook_missing = "未挂载"
+hook_preview = "浏览器预览（未连接 Tauri）"
+foreground = "{process}"
+foreground_empty = "—"
+foreground_label = "前台窗口"
+foreground_hit = "{process}（命中场景）"
+today = "今日"
+total = "累计"
+times = " 次"
+reset = "清零"
+theme = "主题：{name}"
+theme_system = "主题：{name}（跟随系统）"
+no_tauri = "未连接 Tauri"
+
+[main]
+status = "当前状态"
+status_hint = "总开关控制喵化是否生效，关掉之后所有场景都会停下来。"
+recent = "最近事件"
+recent_hint = "只显示最近几条；完整记录在左侧的「日志记录」里。"
+open_logs = "查看完整日志"
+toggle_hint = "关掉总开关后，钩子仍在，但不再改动任何输入。"
+
+[preferences]
+hint = "外观、界面语言与窗口行为。这些设置都立刻生效，并会自动保存。"
+appearance = "外观"
+language = "界面语言"
+window = "窗口"
+autostart = "开机自动启动"
+autostart_hint = "登录 Windows 后自动在后台运行，将不会弹出配置面板。"
+autostart_on = "已登记：{command}"
+autostart_off = "当前未登记"
+hotkey = "开关热键"
+hotkey_hint = "点一下再按组合键（至少要带一个修饰键，例如 Ctrl+Alt+'）。按 Esc 取消。"
+hotkey_recording = "正在录制：请按下组合键…"
+hotkey_reset = "恢复默认"
+hotkey_off = "未设置"
+hotkey_error_taken = "这个组合键被别的程序占用了，换一个试试"
+hotkey_error_format = "热键至少要带一个修饰键（Ctrl / Alt / Shift / Win）"
+
+[advanced]
+hint = "触发方式、注入方式与场景匹配。不确定时保持默认就好。"
+
+[settings]
+title = "高级设置"
+suffix = "句尾后缀"
+suffix_placeholder = "喵~"
+trigger = "发送键"
+inject_mode = "注入方式"
+delay = "注入延迟（毫秒）"
+close_action = "关闭窗口时"
+require_content = "输入框为空时不追加"
+skip_composing = "输入法组词时不动回车"
+dry_run = "测试模式（此模式下，不执行实际注入）"
+
+[close_action]
+ask = "每次询问"
+hide = "隐藏到任务栏"
+quit = "退出程序"
+
+[close]
+title = "要关闭“喵化输出”吗？"
+body = "「隐藏到任务栏」会让喵化继续在后台生效，之后可以从任务栏的托盘图标重新打开这个面板。"
+hide = "隐藏到任务栏"
+quit = "关闭程序"
+remember = "不再提示"
+
+[tray]
+tooltip = "喵化输出"
+show = "显示控制面板"
+quit = "退出喵化"
+
+[trigger]
+enter = "Enter"
+ctrl_enter = "Ctrl+Enter"
+
+[mode]
+type = "逐字输入"
+clipboard = "剪贴板粘贴"
+
+[scenarios]
+title = "场景"
+hint = "一个场景，即一类要喵化的应用，靠进程名匹配（任务管理器/详细信息中查看，例如 qq.exe）。"
+add = "+ 添加应用"
+col_processes = "进程名"
+col_suffix = "后缀"
+col_trigger = "触发键"
+name_placeholder = "名称"
+processes_placeholder = "进程名，逗号分隔"
+suffix_placeholder = "默认 {suffix}"
+trigger_default = "跟随后缀默认"
+builtin = "内置"
+delete = "删除"
+untitled = "未命名"
+new_name = "新场景"
+
+[selftest]
+title = "自测"
+hint = "在下面的文本框中输入后再按 Enter，预期将先出现「喵~」再换行。\n用于确认钩子与注入链路是通的。"
+placeholder = "请输入文本"
+
+[logs]
+title = "日志记录"
+hint = "每次触发、跳过或失败都记在这里，最新的位于顶上，没有条数上限。"
+inject_once = "往当前焦点试注入"
+clear = "清空"
+empty = "还没有事件。去打几个字按回车试试。"
+config_path = "配置文件：{path} · 本进程：{process}"
+locale = "语言：{locale}"
+
+[footer]
+quit = "退出程序"
+hide = "隐藏到后台"
+ready = "已就绪"
+saving = "保存中…"
+saved = "已保存 {time}"
+save_failed = "保存失败：{error}"
+close_ask = "隐藏到任务栏，或是关闭程序"
+close_hide = "隐藏到任务栏，喵化将继续在后台运行"
+close_quit = "直接退出程序"
+
+[log]
+system = "系统"
+selftest = "自测"
+autostart_on = "已加入开机自启：{path}"
+autostart_off = "已取消开机自启"
+autostart_synced = "开机自启登记的路径和现在不一致，已改成当前这个 exe"
+autostart_failed = "设置开机自启失败：{error}"
+autostart_started = "这次是开机自启拉起来的，面板收在托盘里"
+hotkey_ready = "热键已就绪：{hotkey} 可以开/关总开关"
+hotkey_failed = "热键注册失败：{error}"
+hotkey_on = "热键已设为 {hotkey}"
+hotkey_off = "热键已关闭"
+hotkey_enabled = "热键打开了总开关"
+hotkey_disabled = "热键关闭了总开关"
+hook_mounted = "键盘钩子已挂载，等待 QQ 里的回车"
+hook_failed = "安装键盘钩子失败：{error}"
+hook_unmounted = "键盘钩子已卸载"
+hidden = "已隐藏到任务栏，喵化继续在后台运行"
+already_running = "已经在后台运行，忽略"
+skip = "跳过：{reason}"
+focus_lost = "已取消：焦点已经切走"
+dry_run = "演练：检测到发送键，未注入「{suffix}」"
+appended = "已补上「{suffix}」"
+type_failed = "逐字注入失败：{error}"
+appended_clipboard = "已通过剪贴板补上「{suffix}」"
+clipboard_failed = "剪贴板注入失败：{error}"
+enter_failed = "发送键重放失败：{error}"
+selftest_ok = "已注入「{suffix}」"
+selftest_dry_run = "演练模式：跳过真实注入"
+selftest_failed = "注入失败：{error}"
+
+[skip]
+disabled = "总开关未开启"
+not_trigger = "不是发送键"
+injected = "其他程序模拟的按键"
+no_scenario = "前台进程不在场景列表"
+scenario_disabled = "该场景已关闭"
+modifier = "修饰键状态与触发键不匹配"
+composing = "输入法正在组词"
+empty_input = "输入框似乎是空的"
+
+[summary]
+line = "{state} · 后缀 {suffix} · {trigger} · {mode} · 场景：{scenarios}"
+enabled = "已启用"
+disabled = "已停用"
+no_scenarios = "（没有启用任何场景）"
+
+[scenario.qq]
+name = "QQ"
+note = "QQNT / 经典版 QQ 的主进程"
+
+[scenario.tim]
+name = "TIM"
+note = "TIM 与 QQ 同源，需要单独开启"
+
+[scenario.wechat]
+name = "微信"
+note = "微信 4.x 的进程名是 weixin.exe"

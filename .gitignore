@@ -1,0 +1,4 @@
+/target
+/gen/schemas
+# 由 build.rs 从 ui/ + locales/ 生成
+/dist
