@@ -17,6 +17,7 @@ pub mod hotkey;
 pub mod i18n;
 pub mod inject;
 pub mod meow;
+pub mod ui_assets;
 
 use hook::{Engine, LogEntry};
 use hotkey::HotkeyThread;
@@ -560,4 +561,31 @@ pub fn probe(hold_ms: u64) {
     if !ready {
         eprintln!("[probe] 钩子未在超时前就绪");
     }
+}
+
+/// `meow-text --export-ui`：只生成 `dist/`（前端资源），不编译、不装钩子、不开窗口。
+///
+/// 存在的理由：`tauri build` 在编译之前就要检查 `frontendDist` 目录，
+/// 而 `dist/` 平时是 `build.rs` 在编译期生成的 —— CI 这种干净检出上还没编译，
+/// 目录不存在，`tauri build` 会直接失败。打包脚本先跑一次这个命令即可。
+pub fn export_ui() -> Result<(), String> {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let (keys, locales) = ui_assets::load_locales(&root.join("locales"))?;
+
+    // 首屏语言：和 build.rs 一样，`MEOW_LOCALE` 优先，否则跟随系统
+    let hint = std::env::var("MEOW_LOCALE")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| i18n::system_tag().to_string());
+    let default = ui_assets::pick_default(locales.iter().map(|(tag, _)| tag.as_str()), &hint)
+        .ok_or_else(|| "挑不出默认语言".to_string())?;
+
+    ui_assets::export(&root, &default, &keys, &locales)?;
+    println!(
+        "[meow] 已生成 {}（默认语言 {default}，共 {} 种语言 / {} 条文案）",
+        root.join("dist").display(),
+        locales.len(),
+        keys.len()
+    );
+    Ok(())
 }

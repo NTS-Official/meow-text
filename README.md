@@ -193,13 +193,14 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Run
 ## 开发
 
 ```bash
-cargo test                        # 37 个单测 + 1 个端到端钩子测试 + 6 个本地化一致性检查
+cargo test                        # 39 个单测 + 1 个端到端钩子测试 + 6 个本地化一致性检查
 cargo test -- --ignored           # 额外跑会真改注册表的那条（autostart 往返）
 cargo run                         # 开发模式跑面板（首屏语言按系统语言选）
 MEOW_LOCALE=en-US cargo run       # 指定首屏默认语言（界面里仍可随时切）
 cargo build --release             # 出 target/release/meow-text.exe
 meow-text.exe --probe 300         # 装好钩子、打印一行 JSON 状态后退出（自检用）
 meow-text.exe --hidden            # 静默启动（开机自启用的就是这个），退到托盘
+meow-text.exe --export-ui         # 只铺 dist/（前端资源），打包脚本在 tauri build 前用
 ```
 
 端到端测试会真的装一个全局钩子、开一个 Win32 编辑框抢前台，验证
@@ -218,6 +219,12 @@ meow-text.exe --hidden            # 静默启动（开机自启用的就是这�
 | `check` | `cargo fmt --all -- --check`（行宽见 `rustfmt.toml`）+ `cargo clippy --all-targets -- -D warnings` |
 | `test` | `cargo test`：单测 + 本地化一致性检查 + 端到端键盘钩子测试（抢不到前台焦点时它自己跳过） |
 | `bundle` | 只在推 `v*` tag 时跑：`tauri build` 出 exe + MSI/NSIS 安装包，挂成 **Release 草稿** |
+
+> `dist/`（前端资源）平时是 `build.rs` 在**编译期**生成的，而 `tauri build` 会在**编译之前**
+> 就检查这个目录是否存在 —— 干净检出上它还不存在，所以打包前必须先跑一次
+> `meow-text --export-ui` 把资源铺好（CI 里就是这么做的）。生成逻辑在 `src/ui_assets.rs`，
+> `build.rs` 里保留了等价的一份（build script 不能依赖主 crate），两者的输出由
+> 测试 `dist_matches_ui_assets_output` 逐字节比对。
 
 发版流程：改 `Cargo.toml` / `tauri.conf.json` 里的 `version` → `git tag v0.1.0 && git push origin v0.1.0`，
 构建完到 Releases 里把草稿发出来即可。注意 tag 必须是 `v` 开头的（旧的那个 `release` tag 不会触发）。

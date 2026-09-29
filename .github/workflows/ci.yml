@@ -96,6 +96,13 @@ jobs:
         with:
           key: ${{ runner.os }}-bundle
 
+      # `tauri build` 在编译**之前**就会检查 frontendDist（dist/）是否存在，
+      # 而 dist/ 平时是 build.rs 在编译期生成的 —— 干净检出上它还不存在，
+      # 直接跑 tauri build 会报 “Unable to find your web assets”。
+      # 所以先用 --export-ui 把前端资源铺好（它只生成文件，不编译业务代码）。
+      - name: 生成前端资源
+        run: cargo run -- --export-ui
+
       # tauri-action：跑 `tauri build` + 建 Release + 上传 exe / MSI / NSIS 安装包
       - uses: tauri-apps/tauri-action@v1
         env:

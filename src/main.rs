@@ -14,6 +14,18 @@ fn main() {
         return;
     }
 
+    // `--export-ui`：只铺 dist/，给 `tauri build` 之前用（它会在编译前检查这个目录）
+    if args.iter().any(|arg| arg == "--export-ui") {
+        attach_parent_console();
+        match meow_text_lib::export_ui() {
+            Ok(()) => return,
+            Err(err) => {
+                eprintln!("[meow] 生成前端资源失败：{err}");
+                std::process::exit(1);
+            }
+        }
+    }
+
     // `--hidden` 由注册表里的开机启动项使用（见 src/autostart.rs）：
     // 登录后静默起来，只留托盘图标，不弹面板。
     meow_text_lib::run();
