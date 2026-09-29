@@ -6,11 +6,11 @@ use windows::Win32::Foundation::{HANDLE, HGLOBAL};
 use windows::Win32::System::DataExchange::{
     CloseClipboard, EmptyClipboard, GetClipboardData, IsClipboardFormatAvailable, OpenClipboard, SetClipboardData,
 };
-use windows::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE};
+use windows::Win32::System::Memory::{GMEM_MOVEABLE, GlobalAlloc, GlobalLock, GlobalUnlock};
 use windows::Win32::System::Ole::CF_UNICODETEXT;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    MapVirtualKeyW, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-    KEYEVENTF_UNICODE, MAPVK_VK_TO_VSC, VIRTUAL_KEY, VK_CONTROL, VK_RETURN, VK_V,
+    INPUT, INPUT_0, INPUT_KEYBOARD, KEYBD_EVENT_FLAGS, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, MAPVK_VK_TO_VSC,
+    MapVirtualKeyW, SendInput, VIRTUAL_KEY, VK_CONTROL, VK_RETURN, VK_V,
 };
 
 /// "MEOW"：标在注入事件上的记号，钩子据此识别自己的按键。
@@ -99,9 +99,7 @@ fn set_clipboard_text(text: &str) -> Result<(), String> {
         let result = unsafe {
             EmptyClipboard()
                 .map_err(|e| format!("EmptyClipboard 失败：{e}"))
-                .and_then(|()| {
-                    GlobalAlloc(GMEM_MOVEABLE, bytes).map_err(|e| format!("GlobalAlloc 失败：{e}"))
-                })
+                .and_then(|()| GlobalAlloc(GMEM_MOVEABLE, bytes).map_err(|e| format!("GlobalAlloc 失败：{e}")))
                 .and_then(|hglobal| {
                     let ptr = GlobalLock(hglobal);
                     if ptr.is_null() {
@@ -129,19 +127,20 @@ fn clipboard_text() -> Option<String> {
         }
         let mut out = None;
         if IsClipboardFormatAvailable(CF_UNICODETEXT.0 as u32).is_ok()
-            && let Ok(handle) = GetClipboardData(CF_UNICODETEXT.0 as u32) {
-                let hglobal = HGLOBAL(handle.0);
-                let ptr = GlobalLock(hglobal);
-                if !ptr.is_null() {
-                    let base = ptr as *const u16;
-                    let mut len = 0usize;
-                    while len < (1 << 20) && *base.add(len) != 0 {
-                        len += 1;
-                    }
-                    out = Some(String::from_utf16_lossy(std::slice::from_raw_parts(base, len)));
-                    let _ = GlobalUnlock(hglobal);
+            && let Ok(handle) = GetClipboardData(CF_UNICODETEXT.0 as u32)
+        {
+            let hglobal = HGLOBAL(handle.0);
+            let ptr = GlobalLock(hglobal);
+            if !ptr.is_null() {
+                let base = ptr as *const u16;
+                let mut len = 0usize;
+                while len < (1 << 20) && *base.add(len) != 0 {
+                    len += 1;
                 }
+                out = Some(String::from_utf16_lossy(std::slice::from_raw_parts(base, len)));
+                let _ = GlobalUnlock(hglobal);
             }
+        }
         let _ = CloseClipboard();
         out
     }

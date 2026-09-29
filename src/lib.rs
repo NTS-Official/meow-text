@@ -78,9 +78,13 @@ pub struct UiState {
 /// 所以带上 `app` 拿状态；取不到（比如还没起起来）就按"没注册"处理。
 fn build_state(app: &AppHandle, engine: &Engine) -> UiState {
     let configured = engine.config_snapshot().hotkey;
-    let registered = app
-        .try_state::<AppState>()
-        .and_then(|state| state.hotkeys.lock().ok().and_then(|slot| slot.as_ref().and_then(|it| it.current())));
+    let registered = app.try_state::<AppState>().and_then(|state| {
+        state
+            .hotkeys
+            .lock()
+            .ok()
+            .and_then(|slot| slot.as_ref().and_then(|it| it.current()))
+    });
 
     let hotkey_display = hotkey::display(&configured);
     let hotkey_error = if configured.is_empty() || registered.as_deref() == Some(configured.as_str()) {
@@ -439,9 +443,7 @@ pub fn run() {
             // 配置里开着自启就把注册表对齐（换过目录/版本后顺手修掉旧路径），
             // 关着的话顺手清掉旧版本留下的启动项。
             match autostart::sync(engine.config_snapshot().autostart, &own_exe_path()) {
-                Ok(true) => {
-                    engine.push_log(LogEntry::ok(i18n::LOG_SYSTEM, i18n::LOG_AUTOSTART_SYNCED.text()))
-                }
+                Ok(true) => engine.push_log(LogEntry::ok(i18n::LOG_SYSTEM, i18n::LOG_AUTOSTART_SYNCED.text())),
                 Ok(false) => {}
                 Err(error) => engine.push_log(LogEntry::warn(
                     i18n::LOG_SYSTEM,

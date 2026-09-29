@@ -1,7 +1,7 @@
 //! 配置的默认值、磁盘读写与内置场景。
 
 use crate::i18n;
-use crate::meow::{Config, InjectMode, Scenario, Stats, ThemeMode, Trigger, DEFAULT_SUFFIX};
+use crate::meow::{Config, DEFAULT_SUFFIX, InjectMode, Scenario, Stats, ThemeMode, Trigger};
 use std::path::Path;
 
 /// 内置场景的显示名与说明来自语言包（**每次取用都按当前语言**，切语言后自动跟着变）。
@@ -9,10 +9,7 @@ fn builtin_text(id: &str) -> Option<(&'static str, &'static str)> {
     match id {
         "qq" => Some((i18n::SCENARIO_QQ_NAME.text(), i18n::SCENARIO_QQ_NOTE.text())),
         "tim" => Some((i18n::SCENARIO_TIM_NAME.text(), i18n::SCENARIO_TIM_NOTE.text())),
-        "wechat" => Some((
-            i18n::SCENARIO_WECHAT_NAME.text(),
-            i18n::SCENARIO_WECHAT_NOTE.text(),
-        )),
+        "wechat" => Some((i18n::SCENARIO_WECHAT_NAME.text(), i18n::SCENARIO_WECHAT_NOTE.text())),
         _ => None,
     }
 }

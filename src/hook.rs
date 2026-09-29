@@ -27,7 +27,7 @@ use std::time::{Duration, Instant};
 use windows::Win32::Foundation::{CloseHandle, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Threading::{
-    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
 };
 use windows::Win32::UI::Input::Ime::{GCS_COMPSTR, ImmGetCompositionStringW, ImmGetContext, ImmReleaseContext};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
@@ -35,7 +35,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, DispatchMessageW, GetForegroundWindow, GetMessageW, GetWindowThreadProcessId, HHOOK,
-    KBDLLHOOKSTRUCT, MSG, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, LLKHF_INJECTED, WH_KEYBOARD_LL,
+    KBDLLHOOKSTRUCT, LLKHF_INJECTED, MSG, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, WH_KEYBOARD_LL,
     WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
 use windows::core::PWSTR;
@@ -285,9 +285,10 @@ pub fn process_of_window(hwnd: HWND) -> Option<String> {
     let key = hwnd.0 as isize;
     if let Ok(cache) = PROC_CACHE.lock()
         && let Some((cached_key, name)) = cache.as_ref()
-            && *cached_key == key {
-                return name.clone();
-            }
+        && *cached_key == key
+    {
+        return name.clone();
+    }
 
     let mut pid = 0u32;
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
@@ -420,7 +421,7 @@ unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARA
             }
             Decision::Skip { reason, scenario } => {
                 if let Some(name) = scenario {
-                    let detail = i18n::LOG_SKIP.fill( &[("reason", reason.label())]);
+                    let detail = i18n::LOG_SKIP.fill(&[("reason", reason.label())]);
                     engine.push_log(LogEntry::warn(name, detail));
                 }
                 next_hook(code, wparam, lparam)
@@ -469,7 +470,7 @@ fn hook_thread(engine: Arc<Engine>) {
                 engine.push_log(LogEntry::warn(i18n::LOG_SYSTEM, i18n::LOG_HOOK_UNMOUNTED));
             }
             Err(err) => {
-                let text = i18n::LOG_HOOK_FAILED.fill( &[("error", &err.to_string())]);
+                let text = i18n::LOG_HOOK_FAILED.fill(&[("error", &err.to_string())]);
                 engine.hook_active.store(false, Ordering::SeqCst);
                 if let Ok(mut slot) = engine.hook_error.lock() {
                     *slot = Some(text.clone());
@@ -514,34 +515,32 @@ fn inject_worker(engine: Arc<Engine>, queue: Receiver<Job>) {
         let mut restore: Option<Option<String>> = None;
 
         if job.dry_run {
-            notes.push(i18n::LOG_DRY_RUN.fill( &[("suffix", job.suffix.as_str())]));
+            notes.push(i18n::LOG_DRY_RUN.fill(&[("suffix", job.suffix.as_str())]));
         } else {
             match job.mode {
                 InjectMode::Type => match inject::type_text(&job.suffix) {
                     Ok(()) => {
                         std::thread::sleep(Duration::from_millis(25));
                         appended = true;
-                        notes.push(i18n::LOG_APPENDED.fill( &[("suffix", job.suffix.as_str())]));
+                        notes.push(i18n::LOG_APPENDED.fill(&[("suffix", job.suffix.as_str())]));
                     }
-                    Err(err) => notes.push(i18n::LOG_TYPE_FAILED.fill( &[("error", &err)])),
+                    Err(err) => notes.push(i18n::LOG_TYPE_FAILED.fill(&[("error", &err)])),
                 },
                 InjectMode::Clipboard => match inject::paste_text(&job.suffix) {
                     Ok(previous) => {
                         std::thread::sleep(Duration::from_millis(150));
                         appended = true;
                         restore = Some(previous);
-                        notes.push(i18n::LOG_APPENDED_CLIPBOARD.fill(
-                            &[("suffix", job.suffix.as_str())],
-                        ));
+                        notes.push(i18n::LOG_APPENDED_CLIPBOARD.fill(&[("suffix", job.suffix.as_str())]));
                     }
-                    Err(err) => notes.push(i18n::LOG_CLIPBOARD_FAILED.fill( &[("error", &err)])),
+                    Err(err) => notes.push(i18n::LOG_CLIPBOARD_FAILED.fill(&[("error", &err)])),
                 },
             }
         }
 
         // 无论注入成功与否，都要把发送键还回去，否则用户的消息会卡在输入框里。
         if let Err(err) = inject::send_enter() {
-            notes.push(i18n::LOG_ENTER_FAILED.fill( &[("error", &err.to_string())]));
+            notes.push(i18n::LOG_ENTER_FAILED.fill(&[("error", &err.to_string())]));
         }
 
         if let Some(previous) = restore {
@@ -582,8 +581,7 @@ pub fn probe_status(engine: &Engine) -> String {
 pub fn wait_hook_ready(engine: &Engine, timeout: Duration) -> bool {
     let deadline = Instant::now() + timeout;
     while Instant::now() < deadline {
-        if engine.hook_active.load(Ordering::SeqCst) || engine.hook_error.lock().map(|e| e.is_some()).unwrap_or(false)
-        {
+        if engine.hook_active.load(Ordering::SeqCst) || engine.hook_error.lock().map(|e| e.is_some()).unwrap_or(false) {
             return engine.hook_active.load(Ordering::SeqCst);
         }
         std::thread::sleep(Duration::from_millis(20));
@@ -604,11 +602,11 @@ pub fn inject_probe(engine: &Engine) -> Result<(), String> {
     match &result {
         Ok(()) => engine.push_log(LogEntry::ok(
             i18n::LOG_SELFTEST,
-            i18n::LOG_SELFTEST_OK.fill( &[("suffix", cfg.suffix.as_str())]),
+            i18n::LOG_SELFTEST_OK.fill(&[("suffix", cfg.suffix.as_str())]),
         )),
         Err(err) => engine.push_log(LogEntry::warn(
             i18n::LOG_SELFTEST,
-            i18n::LOG_SELFTEST_FAILED.fill( &[("error", err)]),
+            i18n::LOG_SELFTEST_FAILED.fill(&[("error", err)]),
         )),
     }
     result

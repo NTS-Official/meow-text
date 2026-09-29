@@ -371,9 +371,10 @@ pub fn decide(cfg: &Config, ev: &KeyEvent<'_>, accept_injected: bool) -> Decisio
     };
 
     if let Some(s) = scenario
-        && !s.enabled {
-            return skip(SkipReason::ScenarioDisabled, scenario_name);
-        }
+        && !s.enabled
+    {
+        return skip(SkipReason::ScenarioDisabled, scenario_name);
+    }
 
     let trigger = scenario.map(|s| s.trigger_or(cfg.trigger)).unwrap_or(cfg.trigger);
     if !trigger.matches(ev.ctrl_down) {
@@ -395,9 +396,7 @@ pub fn decide(cfg: &Config, ev: &KeyEvent<'_>, accept_injected: bool) -> Decisio
     Decision::Meow(MeowPlan {
         suffix,
         trigger,
-        scenario_id: scenario
-            .map(|s| s.id.clone())
-            .unwrap_or_else(|| "selftest".to_string()),
+        scenario_id: scenario.map(|s| s.id.clone()).unwrap_or_else(|| "selftest".to_string()),
         scenario_name: scenario_name.unwrap_or_else(|| "自测".to_string()),
     })
 }
@@ -457,30 +456,48 @@ mod tests {
 
     #[test]
     fn disabled_master_switch_does_nothing() {
-        let cfg = Config { enabled: false, ..base_config() };
+        let cfg = Config {
+            enabled: false,
+            ..base_config()
+        };
         assert!(matches!(
             decide(&cfg, &enter_in_qq(), false),
-            Decision::Skip { reason: SkipReason::Disabled, .. }
+            Decision::Skip {
+                reason: SkipReason::Disabled,
+                ..
+            }
         ));
     }
 
     #[test]
     fn non_enter_key_is_ignored() {
         let cfg = base_config();
-        let ev = KeyEvent { is_enter_down: false, ..enter_in_qq() };
+        let ev = KeyEvent {
+            is_enter_down: false,
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &ev, false),
-            Decision::Skip { reason: SkipReason::NotTriggerKey, .. }
+            Decision::Skip {
+                reason: SkipReason::NotTriggerKey,
+                ..
+            }
         ));
     }
 
     #[test]
     fn injected_keys_are_ignored_unless_testing() {
         let cfg = base_config();
-        let ev = KeyEvent { injected: true, ..enter_in_qq() };
+        let ev = KeyEvent {
+            injected: true,
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &ev, false),
-            Decision::Skip { reason: SkipReason::Injected, .. }
+            Decision::Skip {
+                reason: SkipReason::Injected,
+                ..
+            }
         ));
         assert!(matches!(decide(&cfg, &ev, true), Decision::Meow(_)));
     }
@@ -488,52 +505,85 @@ mod tests {
     #[test]
     fn ctrl_enter_is_left_alone_when_enter_is_the_trigger() {
         let cfg = base_config();
-        let ev = KeyEvent { ctrl_down: true, ..enter_in_qq() };
+        let ev = KeyEvent {
+            ctrl_down: true,
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &ev, false),
-            Decision::Skip { reason: SkipReason::ModifierHeld, scenario: Some(_) }
+            Decision::Skip {
+                reason: SkipReason::ModifierHeld,
+                scenario: Some(_)
+            }
         ));
     }
 
     #[test]
     fn ctrl_enter_trigger_requires_ctrl() {
-        let cfg = Config { trigger: Trigger::CtrlEnter, ..base_config() };
+        let cfg = Config {
+            trigger: Trigger::CtrlEnter,
+            ..base_config()
+        };
 
-        let with_ctrl = KeyEvent { ctrl_down: true, ..enter_in_qq() };
+        let with_ctrl = KeyEvent {
+            ctrl_down: true,
+            ..enter_in_qq()
+        };
         assert!(matches!(decide(&cfg, &with_ctrl, false), Decision::Meow(_)));
 
         assert!(matches!(
             decide(&cfg, &enter_in_qq(), false),
-            Decision::Skip { reason: SkipReason::ModifierHeld, .. }
+            Decision::Skip {
+                reason: SkipReason::ModifierHeld,
+                ..
+            }
         ));
     }
 
     #[test]
     fn alt_enter_is_ignored() {
         let cfg = base_config();
-        let ev = KeyEvent { alt_down: true, ..enter_in_qq() };
+        let ev = KeyEvent {
+            alt_down: true,
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &ev, false),
-            Decision::Skip { reason: SkipReason::ModifierHeld, scenario: None }
+            Decision::Skip {
+                reason: SkipReason::ModifierHeld,
+                scenario: None
+            }
         ));
     }
 
     #[test]
     fn unknown_process_is_ignored_without_logging() {
         let cfg = base_config();
-        let ev = KeyEvent { process: Some("notepad.exe"), ..enter_in_qq() };
+        let ev = KeyEvent {
+            process: Some("notepad.exe"),
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &ev, false),
-            Decision::Skip { reason: SkipReason::NoScenario, scenario: None }
+            Decision::Skip {
+                reason: SkipReason::NoScenario,
+                scenario: None
+            }
         ));
     }
 
     #[test]
     fn disabled_scenario_is_skipped_but_logged() {
-        let cfg = Config { scenarios: vec![qq_scenario(false)], ..base_config() };
+        let cfg = Config {
+            scenarios: vec![qq_scenario(false)],
+            ..base_config()
+        };
         assert!(matches!(
             decide(&cfg, &enter_in_qq(), false),
-            Decision::Skip { reason: SkipReason::ScenarioDisabled, scenario: Some(_) }
+            Decision::Skip {
+                reason: SkipReason::ScenarioDisabled,
+                scenario: Some(_)
+            }
         ));
     }
 
@@ -541,20 +591,36 @@ mod tests {
     fn composing_and_empty_input_are_skipped() {
         let cfg = base_config();
 
-        let composing = KeyEvent { composing: true, ..enter_in_qq() };
+        let composing = KeyEvent {
+            composing: true,
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &composing, false),
-            Decision::Skip { reason: SkipReason::Composing, .. }
+            Decision::Skip {
+                reason: SkipReason::Composing,
+                ..
+            }
         ));
 
-        let empty = KeyEvent { input_maybe_empty: true, ..enter_in_qq() };
+        let empty = KeyEvent {
+            input_maybe_empty: true,
+            ..enter_in_qq()
+        };
         assert!(matches!(
             decide(&cfg, &empty, false),
-            Decision::Skip { reason: SkipReason::EmptyInput, .. }
+            Decision::Skip {
+                reason: SkipReason::EmptyInput,
+                ..
+            }
         ));
 
         // 关掉这两个保护后应该继续喵化
-        let loose = Config { skip_when_composing: false, require_content: false, ..base_config() };
+        let loose = Config {
+            skip_when_composing: false,
+            require_content: false,
+            ..base_config()
+        };
         assert!(matches!(decide(&loose, &composing, false), Decision::Meow(_)));
         assert!(matches!(decide(&loose, &empty, false), Decision::Meow(_)));
     }
@@ -570,7 +636,10 @@ mod tests {
             }],
             ..base_config()
         };
-        let ev = KeyEvent { ctrl_down: true, ..enter_in_qq() };
+        let ev = KeyEvent {
+            ctrl_down: true,
+            ..enter_in_qq()
+        };
         match decide(&cfg, &ev, false) {
             Decision::Meow(plan) => {
                 assert_eq!(plan.suffix, "嗷呜~");
@@ -603,10 +672,16 @@ mod tests {
         }
 
         // 自测开关没开时，本应用窗口不该被动
-        let quiet = KeyEvent { selftest_active: false, ..ev };
+        let quiet = KeyEvent {
+            selftest_active: false,
+            ..ev
+        };
         assert!(matches!(
             decide(&cfg, &quiet, false),
-            Decision::Skip { reason: SkipReason::NoScenario, .. }
+            Decision::Skip {
+                reason: SkipReason::NoScenario,
+                ..
+            }
         ));
     }
 

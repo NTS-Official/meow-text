@@ -14,13 +14,13 @@ use std::time::{Duration, Instant};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, MAPVK_VK_TO_VSC,
+    INPUT, INPUT_0, INPUT_KEYBOARD, KEYBD_EVENT_FLAGS, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, MAPVK_VK_TO_VSC,
     MapVirtualKeyW, SendInput, VIRTUAL_KEY, VK_RETURN,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DestroyWindow, DispatchMessageW, GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId, MSG,
-    PM_REMOVE, PeekMessageW, SW_SHOW, SetForegroundWindow, SetWindowTextW, ShowWindow, TranslateMessage, WINDOW_EX_STYLE,
-    WINDOW_STYLE, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
+    CreateWindowExW, DestroyWindow, DispatchMessageW, GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId,
+    MSG, PM_REMOVE, PeekMessageW, SW_SHOW, SetForegroundWindow, SetWindowTextW, ShowWindow, TranslateMessage,
+    WINDOW_EX_STYLE, WINDOW_STYLE, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
 };
 use windows::core::w;
 
@@ -36,9 +36,7 @@ fn own_process_name() -> String {
 }
 
 fn create_edit_window() -> HWND {
-    let style = WINDOW_STYLE(
-        WS_OVERLAPPEDWINDOW.0 | WS_VISIBLE.0 | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
-    );
+    let style = WINDOW_STYLE(WS_OVERLAPPEDWINDOW.0 | WS_VISIBLE.0 | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN);
     unsafe {
         CreateWindowExW(
             WINDOW_EX_STYLE(0),
@@ -167,7 +165,9 @@ fn hook_pipeline_fires_only_when_input_box_has_content() {
     let hwnd = create_edit_window();
     if !force_foreground(hwnd) {
         println!("[e2e] SKIP：抢不到前台焦点（当前前台是别的窗口），未运行端到端断言");
-        unsafe { let _ = DestroyWindow(hwnd); }
+        unsafe {
+            let _ = DestroyWindow(hwnd);
+        }
         return;
     }
 
@@ -227,7 +227,9 @@ fn hook_pipeline_fires_only_when_input_box_has_content() {
     let fired_case = window_text(hwnd);
     println!("[e2e] 阶段2 有内容 + 回车 → 编辑框={fired_case:?}");
 
-    unsafe { let _ = DestroyWindow(hwnd); }
+    unsafe {
+        let _ = DestroyWindow(hwnd);
+    }
 
     assert!(
         fired_case.contains("hi喵~"),

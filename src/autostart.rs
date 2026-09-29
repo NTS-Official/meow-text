@@ -21,8 +21,8 @@ mod imp {
     use super::{HIDDEN_FLAG, VALUE_NAME};
     use windows::Win32::Foundation::WIN32_ERROR;
     use windows::Win32::System::Registry::{
-        HKEY, HKEY_CURRENT_USER, KEY_SET_VALUE, REG_OPTION_NON_VOLATILE, REG_SZ, RegCloseKey,
-        RegCreateKeyExW, RegDeleteValueW, RegSetValueExW,
+        HKEY, HKEY_CURRENT_USER, KEY_SET_VALUE, REG_OPTION_NON_VOLATILE, REG_SZ, RegCloseKey, RegCreateKeyExW,
+        RegDeleteValueW, RegSetValueExW,
     };
     use windows::core::{PCWSTR, w};
 

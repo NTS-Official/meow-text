@@ -61,13 +61,7 @@ fn main() {
     warn_unused_keys(&keys, &src_text, &ui_text);
 
     write_rust_module(&out_dir.join("i18n.rs"), &build_default, &keys, &locales);
-    write_web_assets(
-        &root.join("ui"),
-        &root.join("dist"),
-        &build_default,
-        &keys,
-        &locales,
-    );
+    write_web_assets(&root.join("ui"), &root.join("dist"), &build_default, &keys, &locales);
 
     tauri_build::build();
 }
@@ -80,8 +74,7 @@ fn env(name: &str) -> String {
 
 fn discover_locales(dir: &Path) -> BTreeMap<String, PathBuf> {
     let mut found = BTreeMap::new();
-    let entries =
-        std::fs::read_dir(dir).unwrap_or_else(|err| panic!("读取 {} 失败：{err}", dir.display()));
+    let entries = std::fs::read_dir(dir).unwrap_or_else(|err| panic!("读取 {} 失败：{err}", dir.display()));
     for entry in entries.flatten() {
         let path = entry.path();
         if path.extension().and_then(|ext| ext.to_str()) != Some("toml") {
@@ -143,10 +136,7 @@ fn pick_locale(files: &BTreeMap<String, PathBuf>, hint: &str) -> String {
         if let Some(key) = files.keys().find(|key| key.eq_ignore_ascii_case(&wanted)) {
             return key.clone();
         }
-        if let Some(key) = files
-            .keys()
-            .find(|key| key.to_ascii_lowercase().starts_with(&wanted))
-        {
+        if let Some(key) = files.keys().find(|key| key.to_ascii_lowercase().starts_with(&wanted)) {
             return key.clone();
         }
     }
@@ -158,10 +148,8 @@ fn pick_locale(files: &BTreeMap<String, PathBuf>, hint: &str) -> String {
 }
 
 fn load_locale(path: &Path) -> BTreeMap<String, String> {
-    let text = std::fs::read_to_string(path)
-        .unwrap_or_else(|err| panic!("读取 {} 失败：{err}", path.display()));
-    let value: toml::Value =
-        toml::from_str(&text).unwrap_or_else(|err| panic!("解析 {} 失败：{err}", path.display()));
+    let text = std::fs::read_to_string(path).unwrap_or_else(|err| panic!("读取 {} 失败：{err}", path.display()));
+    let value: toml::Value = toml::from_str(&text).unwrap_or_else(|err| panic!("解析 {} 失败：{err}", path.display()));
 
     let mut table = BTreeMap::new();
     flatten(&value, "", &mut table, path);
@@ -183,10 +171,7 @@ fn flatten(value: &toml::Value, prefix: &str, out: &mut BTreeMap<String, String>
         toml::Value::String(text) => {
             out.insert(prefix.to_string(), text.clone());
         }
-        other => panic!(
-            "{}：文案键 {prefix} 必须是字符串，现在是 {other}",
-            path.display()
-        ),
+        other => panic!("{}：文案键 {prefix} 必须是字符串，现在是 {other}", path.display()),
     }
 }
 
@@ -257,18 +242,13 @@ fn write_rust_module(
 
     out.push_str("pub static LOCALES: &[Locale] = &[\n");
     for (tag, table) in locales {
-        let name = table
-            .get("locale.name")
-            .map(String::as_str)
-            .unwrap_or(tag.as_str());
+        let name = table.get("locale.name").map(String::as_str).unwrap_or(tag.as_str());
         out.push_str("    Locale {\n");
         out.push_str(&format!("        tag: {tag:?},\n"));
         out.push_str(&format!("        name: {name:?},\n"));
         out.push_str("        strings: &[\n");
         for key in keys {
-            let value = table
-                .get(key)
-                .unwrap_or_else(|| panic!("{tag} 缺少文案键 {key}"));
+            let value = table.get(key).unwrap_or_else(|| panic!("{tag} 缺少文案键 {key}"));
             out.push_str(&format!("            {value:?},\n"));
         }
         out.push_str("        ],\n    },\n");
@@ -281,9 +261,7 @@ fn write_rust_module(
         if let Some(previous) = owners.insert(name.clone(), key.clone()) {
             panic!("文案键 {previous} 与 {key} 生成的常量名都是 {name}，请改掉其中一个键名");
         }
-        out.push_str(&format!(
-            "/// `{key}`\npub const {name}: Key = Key({index});\n"
-        ));
+        out.push_str(&format!("/// `{key}`\npub const {name}: Key = Key({index});\n"));
     }
 
     std::fs::write(path, out).unwrap_or_else(|err| panic!("写入 {} 失败：{err}", path.display()));
@@ -320,11 +298,9 @@ fn write_web_assets(
     locales: &[(String, BTreeMap<String, String>)],
 ) {
     if dist_dir.exists() {
-        std::fs::remove_dir_all(dist_dir)
-            .unwrap_or_else(|err| panic!("清理 {} 失败：{err}", dist_dir.display()));
+        std::fs::remove_dir_all(dist_dir).unwrap_or_else(|err| panic!("清理 {} 失败：{err}", dist_dir.display()));
     }
-    std::fs::create_dir_all(dist_dir)
-        .unwrap_or_else(|err| panic!("创建 {} 失败：{err}", dist_dir.display()));
+    std::fs::create_dir_all(dist_dir).unwrap_or_else(|err| panic!("创建 {} 失败：{err}", dist_dir.display()));
 
     // 首屏按「本次编译的默认语言」静态替换；运行时切语言由 locale.js 负责
     let default_table = locales
@@ -334,8 +310,7 @@ fn write_web_assets(
         .unwrap_or(&locales[0].1);
 
     let mut missing: BTreeSet<String> = BTreeSet::new();
-    let entries =
-        std::fs::read_dir(ui_dir).unwrap_or_else(|err| panic!("读取 {} 失败：{err}", ui_dir.display()));
+    let entries = std::fs::read_dir(ui_dir).unwrap_or_else(|err| panic!("读取 {} 失败：{err}", ui_dir.display()));
     for entry in entries.flatten() {
         let path = entry.path();
         if !path.is_file() {
@@ -344,11 +319,9 @@ fn write_web_assets(
         let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
             continue;
         };
-        let text = std::fs::read_to_string(&path)
-            .unwrap_or_else(|err| panic!("读取 {} 失败：{err}", path.display()));
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|err| panic!("读取 {} 失败：{err}", path.display()));
         let rendered = substitute(&text, default_table, name, &mut missing);
-        std::fs::write(dist_dir.join(name), rendered)
-            .unwrap_or_else(|err| panic!("写入 {name} 失败：{err}"));
+        std::fs::write(dist_dir.join(name), rendered).unwrap_or_else(|err| panic!("写入 {name} 失败：{err}"));
     }
 
     if !missing.is_empty() {
@@ -359,20 +332,12 @@ fn write_web_assets(
         );
     }
 
-    std::fs::write(
-        dist_dir.join("locale.js"),
-        locale_js(build_default, keys, locales),
-    )
-    .unwrap_or_else(|err| panic!("写入 locale.js 失败：{err}"));
+    std::fs::write(dist_dir.join("locale.js"), locale_js(build_default, keys, locales))
+        .unwrap_or_else(|err| panic!("写入 locale.js 失败：{err}"));
 }
 
 /// 把 `{{ key }}` 替换成文案；替换不了的记进 missing。
-fn substitute(
-    text: &str,
-    table: &BTreeMap<String, String>,
-    file: &str,
-    missing: &mut BTreeSet<String>,
-) -> String {
+fn substitute(text: &str, table: &BTreeMap<String, String>, file: &str, missing: &mut BTreeSet<String>) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
 
@@ -399,11 +364,7 @@ fn substitute(
 }
 
 /// 前端用的多语言表：全部语言 + 默认语言。切语言就是换一张表重画，不再重新加载页面。
-fn locale_js(
-    build_default: &str,
-    keys: &[String],
-    locales: &[(String, BTreeMap<String, String>)],
-) -> String {
+fn locale_js(build_default: &str, keys: &[String], locales: &[(String, BTreeMap<String, String>)]) -> String {
     let mut list: Vec<serde_json::Value> = Vec::new();
     for (tag, table) in locales {
         let mut strings = serde_json::Map::new();

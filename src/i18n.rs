@@ -81,11 +81,7 @@ fn default_locale() -> &'static Locale {
 
 fn current_index() -> usize {
     let index = CURRENT.load(Ordering::Relaxed);
-    if index < LOCALES.len() {
-        index
-    } else {
-        default_index()
-    }
+    if index < LOCALES.len() { index } else { default_index() }
 }
 
 /// 全部可用语言（按语言标签排序）。
@@ -110,10 +106,7 @@ pub fn default_tag() -> &'static str {
 
 /// 切换语言；标签不认识时返回 false（保持原样）。
 pub fn set_locale(tag: &str) -> bool {
-    match LOCALES
-        .iter()
-        .position(|locale| locale.tag.eq_ignore_ascii_case(tag))
-    {
+    match LOCALES.iter().position(|locale| locale.tag.eq_ignore_ascii_case(tag)) {
         Some(index) => {
             CURRENT.store(index, Ordering::Relaxed);
             true

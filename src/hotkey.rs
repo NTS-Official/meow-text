@@ -221,13 +221,7 @@ impl HotkeyThread {
             .recv_timeout(Duration::from_secs(3))
             .unwrap_or_else(|_| Some("热键线程没在超时前就绪".to_string()));
 
-        (
-            Self {
-                commands,
-                registered,
-            },
-            first,
-        )
+        (Self { commands, registered }, first)
     }
 
     /// 换一个热键（空字符串 = 取消）。同步等结果，界面好即时显示成功还是被占用。

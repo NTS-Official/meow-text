@@ -91,7 +91,8 @@ fn js_keys(text: &str) -> BTreeSet<String> {
     let mut index = 0;
     while let Some(found) = text[index..].find("t(\"") {
         let at = index + found;
-        let boundary_ok = at == 0 || !(bytes[at - 1].is_ascii_alphanumeric() || bytes[at - 1] == b'_' || bytes[at - 1] == b'$');
+        let boundary_ok =
+            at == 0 || !(bytes[at - 1].is_ascii_alphanumeric() || bytes[at - 1] == b'_' || bytes[at - 1] == b'$');
         if boundary_ok {
             let after = &text[at + 3..];
             if let Some(end) = after.find('"') {
@@ -130,7 +131,11 @@ fn referenced_keys_exist_in_every_locale() {
         .into_iter()
         .chain(js_keys(&read("ui/main.js")))
         .collect();
-    assert!(referenced.len() > 40, "只扫到 {} 个文案键，扫描逻辑可能失效了", referenced.len());
+    assert!(
+        referenced.len() > 40,
+        "只扫到 {} 个文案键，扫描逻辑可能失效了",
+        referenced.len()
+    );
 
     for name in &names {
         let table = load_locale(name);
@@ -215,11 +220,9 @@ fn no_placeholder_leaks_into_generated_assets() {
         {
             continue; // 文案表本身可能包含大括号
         }
-        let Ok(text) = std::fs::read_to_string(&path) else { continue };
-        assert!(
-            !text.contains("{{"),
-            "{} 里还有没替换掉的占位符",
-            path.display()
-        );
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        assert!(!text.contains("{{"), "{} 里还有没替换掉的占位符", path.display());
     }
 }

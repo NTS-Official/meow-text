@@ -207,6 +207,21 @@ meow-text.exe --hidden            # 静默启动（开机自启用的就是这�
 
 配置与统计都在 `%APPDATA%\dev.meowtext.desktop\config.json`，程序不联网。
 
+## CI 与发版
+
+`.github/workflows/ci.yml`，**跑在 `windows-latest` 上**——这个程序只能在 Windows 上编译运行
+（Win32 API + `src/lib.rs` 里的 `compile_error!` 兜底），Tauri 在 Linux 上还要一堆系统库，
+所以 ubuntu runner 是没有意义的。
+
+| 任务 | 做什么 |
+| --- | --- |
+| `check` | `cargo fmt --all -- --check`（行宽见 `rustfmt.toml`）+ `cargo clippy --all-targets -- -D warnings` |
+| `test` | `cargo test`：单测 + 本地化一致性检查 + 端到端键盘钩子测试（抢不到前台焦点时它自己跳过） |
+| `bundle` | 只在推 `v*` tag 时跑：`tauri build` 出 exe + MSI/NSIS 安装包，挂成 **Release 草稿** |
+
+发版流程：改 `Cargo.toml` / `tauri.conf.json` 里的 `version` → `git tag v0.1.0 && git push origin v0.1.0`，
+构建完到 Releases 里把草稿发出来即可。注意 tag 必须是 `v` 开头的（旧的那个 `release` tag 不会触发）。
+
 ## 代码结构
 
 | 文件 | 职责 |
