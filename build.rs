@@ -63,6 +63,12 @@ fn main() {
     write_rust_module(&out_dir.join("i18n.rs"), &build_default, &keys, &locales);
     write_web_assets(&root.join("ui"), &root.join("dist"), &build_default, &keys, &locales);
 
+    // 让 `meow-text --export-ui` 用上同一个默认语言：CI 的 windows runner 是英文系统，
+    // 不告诉它一声的话，静态首屏会被烘成英文，而程序自己的兜底语言还是 zh-CN。
+    println!("cargo:rustc-env=MEOW_UI_DEFAULT_LOCALE={build_default}");
+
+    // 这两处是**第一次**生成 i18n.rs 和 dist/ 的地方；之后由 `--export-ui` 负责保持同步，
+    // 测试 `ui_assets::tests::build_artifacts_match_sources` 会在它们过期时拦下来。
     tauri_build::build();
 }
 
@@ -130,21 +136,28 @@ fn language_prefix(primary: u32) -> &'static str {
 }
 
 fn pick_locale(files: &BTreeMap<String, PathBuf>, hint: &str) -> String {
+    pick_locale_tag(files.keys().map(String::as_str), hint).expect("语言包为空")
+}
+
+/// 和 `ui_assets::pick_default` 同义（build script 不能依赖主 crate，只好各留一份；
+/// 两边行为不一致时 `ui_assets` 的黄金文件测试会把 CI 拦下来）。
+fn pick_locale_tag<'a>(tags: impl Iterator<Item = &'a str>, hint: &str) -> Option<String> {
+    let tags: Vec<&str> = tags.collect();
     let wanted = hint.trim().to_ascii_lowercase();
 
     if !wanted.is_empty() {
-        if let Some(key) = files.keys().find(|key| key.eq_ignore_ascii_case(&wanted)) {
-            return key.clone();
+        if let Some(key) = tags.iter().find(|key| key.eq_ignore_ascii_case(&wanted)) {
+            return Some((*key).to_string());
         }
-        if let Some(key) = files.keys().find(|key| key.to_ascii_lowercase().starts_with(&wanted)) {
-            return key.clone();
+        if let Some(key) = tags.iter().find(|key| key.to_ascii_lowercase().starts_with(&wanted)) {
+            return Some((*key).to_string());
         }
     }
 
-    if files.contains_key(FALLBACK_LOCALE) {
-        return FALLBACK_LOCALE.to_string();
+    if let Some(fallback) = tags.iter().find(|key| key.eq_ignore_ascii_case(FALLBACK_LOCALE)) {
+        return Some((*fallback).to_string());
     }
-    files.keys().next().cloned().expect("语言包为空")
+    tags.first().map(|key| (*key).to_string())
 }
 
 fn load_locale(path: &Path) -> BTreeMap<String, String> {

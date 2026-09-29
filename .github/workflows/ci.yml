@@ -100,8 +100,13 @@ jobs:
       # 而 dist/ 平时是 build.rs 在编译期生成的 —— 干净检出上它还不存在，
       # 直接跑 tauri build 会报 “Unable to find your web assets”。
       # 所以先用 --export-ui 把前端资源铺好（它只生成文件，不编译业务代码）。
+      #
+      # MEOW_LOCALE 必须显式指定：runner 是英文系统，不指定的话静态首屏会被烘成英文，
+      # 而程序自己的兜底语言还是 zh-CN，装到中文用户机器上首屏会闪一下英文。
       - name: 生成前端资源
         run: cargo run -- --export-ui
+        env:
+          MEOW_LOCALE: zh-CN
 
       # tauri-action：跑 `tauri build` + 建 Release + 上传 exe / MSI / NSIS 安装包
       - uses: tauri-apps/tauri-action@v1

@@ -563,27 +563,41 @@ pub fn probe(hold_ms: u64) {
     }
 }
 
-/// `meow-text --export-ui`：只生成 `dist/`（前端资源），不编译、不装钩子、不开窗口。
+/// `meow-text --export-ui`：生成前端资源 `dist/` 和文案表 `gen/i18n.rs`，
+/// 不开窗口、不装钩子、不碰配置。
 ///
 /// 存在的理由：`tauri build` 在编译之前就要检查 `frontendDist` 目录，
 /// 而 `dist/` 平时是 `build.rs` 在编译期生成的 —— CI 这种干净检出上还没编译，
-/// 目录不存在，`tauri build` 会直接失败。打包脚本先跑一次这个命令即可。
+/// 目录不存在，`tauri build` 会直接失败。打包脚本先跑一次这个命令即可；
+/// 平时改了 `ui/` 或 `locales/` 也可以用它快速重新生成（不用等整个编译）。
 pub fn export_ui() -> Result<(), String> {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let (keys, locales) = ui_assets::load_locales(&root.join("locales"))?;
 
-    // 首屏语言：和 build.rs 一样，`MEOW_LOCALE` 优先，否则跟随系统
+    // 首屏语言：和 build.rs 一样，`MEOW_LOCALE` 优先，否则跟随系统。
+    // 构建脚本还会通过 `MEOW_UI_DEFAULT_LOCALE` 把它自己挑中的语言告诉我们 ——
+    // CI 的 runner 是英文系统，没有这一条就会和程序里的兜底语言对不上。
     let hint = std::env::var("MEOW_LOCALE")
         .ok()
         .filter(|value| !value.trim().is_empty())
+        .or_else(|| option_env!("MEOW_UI_DEFAULT_LOCALE").map(str::to_string))
         .unwrap_or_else(|| i18n::system_tag().to_string());
     let default = ui_assets::pick_default(locales.iter().map(|(tag, _)| tag.as_str()), &hint)
         .ok_or_else(|| "挑不出默认语言".to_string())?;
 
     ui_assets::export(&root, &default, &keys, &locales)?;
+
+    // Rust 侧那张文案表（gen/i18n.rs）
+    let i18n_path = root.join("gen").join("i18n.rs");
+    if let Some(parent) = i18n_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|err| format!("创建 {} 失败：{err}", parent.display()))?;
+    }
+    ui_assets::write_rust_module(&i18n_path, &default, &keys, &locales)?;
+
     println!(
-        "[meow] 已生成 {}（默认语言 {default}，共 {} 种语言 / {} 条文案）",
+        "[meow] 已生成 {} 和 {}（默认语言 {default}，共 {} 种语言 / {} 条文案）",
         root.join("dist").display(),
+        i18n_path.display(),
         locales.len(),
         keys.len()
     );

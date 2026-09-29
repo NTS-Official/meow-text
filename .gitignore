@@ -1,5 +1,7 @@
 /target
 # tauri 生成的 schema；gen/ 下也可能有本地调试用的临时目录
 /gen/
+# 但文案表的生成物要跟踪：它决定界面上的文字，也要让 rust-analyzer 能索引到
+!/gen/i18n.rs
 # 由 build.rs 从 ui/ + locales/ 生成
 /dist

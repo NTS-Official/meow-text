@@ -1,7 +1,7 @@
 //! 本地化文案：**运行时可切换语言**。
 //!
-//! 所有语言包都在编译期由 `build.rs` 塞进 `$OUT_DIR/i18n.rs`（`LOCALES` 静态表），
-//! 运行时只改一个下标，不需要读盘、也不需要重新加载页面：
+//! 所有语言包都在编译期被 `build.rs` 拍平成一张 `LOCALES` 静态表
+//! （`$OUT_DIR/i18n.rs`），运行时只改一个下标，不需要读盘、也不需要重新加载页面：
 //!
 //! ```ignore
 //! i18n::set_locale("en-US");
@@ -10,11 +10,14 @@
 //! ```
 //!
 //! 每条文案在生成期都会得到一个 `Key` 常量，写错键名是编译错误 —— 这点和以前一样。
+//!
+//! 同一份内容还会被 `meow-text --export-ui` 抄一份到 `gen/i18n.rs`：
+//! 那是给 rust-analyzer 索引、给测试比对的「黄金文件」，编译读的仍然是 `OUT_DIR` 这份。
 
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// 一条文案的句柄。只能由 build.rs 生成的常量构造，所以键名不会写错。
+/// 一条文案的句柄。只能由生成出来的常量构造，所以键名不会写错。
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Key(usize);
 

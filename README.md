@@ -193,7 +193,7 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Run
 ## 开发
 
 ```bash
-cargo test                        # 39 个单测 + 1 个端到端钩子测试 + 6 个本地化一致性检查
+cargo test                        # 40 个单测 + 1 个端到端钩子测试 + 6 个本地化一致性检查
 cargo test -- --ignored           # 额外跑会真改注册表的那条（autostart 往返）
 cargo run                         # 开发模式跑面板（首屏语言按系统语言选）
 MEOW_LOCALE=en-US cargo run       # 指定首屏默认语言（界面里仍可随时切）
@@ -220,11 +220,15 @@ meow-text.exe --export-ui         # 只铺 dist/（前端资源），打包脚�
 | `test` | `cargo test`：单测 + 本地化一致性检查 + 端到端键盘钩子测试（抢不到前台焦点时它自己跳过） |
 | `bundle` | 只在推 `v*` tag 时跑：`tauri build` 出 exe + MSI/NSIS 安装包，挂成 **Release 草稿** |
 
-> `dist/`（前端资源）平时是 `build.rs` 在**编译期**生成的，而 `tauri build` 会在**编译之前**
-> 就检查这个目录是否存在 —— 干净检出上它还不存在，所以打包前必须先跑一次
-> `meow-text --export-ui` 把资源铺好（CI 里就是这么做的）。生成逻辑在 `src/ui_assets.rs`，
-> `build.rs` 里保留了等价的一份（build script 不能依赖主 crate），两者的输出由
-> 测试 `dist_matches_ui_assets_output` 逐字节比对。
+> `dist/`（前端资源）和 `gen/i18n.rs`（Rust 侧的文案表）平时是 `build.rs` 在**编译期**生成的，
+> 而 `tauri build` 会在**编译之前**就检查 `dist/` 是否存在 —— 干净检出上它还不存在，所以打包前
+> 必须先跑一次 `meow-text --export-ui` 把产物铺好（CI 里就是这么做的）。
+> 生成逻辑在 `src/ui_assets.rs`，`build.rs` 里保留了等价的一份（build script 不能依赖主 crate），
+> 两者的输出由测试 `build_artifacts_match_sources` 逐字节比对 —— 改了 `ui/` 或 `locales/`
+> 却忘了重新生成时，它会直接报出来。
+>
+> 打包时固定用 `MEOW_LOCALE=zh-CN`：runner 是英文系统，不指定的话静态首屏会被烘成英文，
+> 而程序自己的兜底语言还是 zh-CN，装到中文用户机器上首屏会闪一下英文。
 
 发版流程：改 `Cargo.toml` / `tauri.conf.json` 里的 `version` → `git tag v0.1.0 && git push origin v0.1.0`，
 构建完到 Releases 里把草稿发出来即可。注意 tag 必须是 `v` 开头的（旧的那个 `release` tag 不会触发）。
@@ -234,6 +238,7 @@ meow-text.exe --export-ui         # 只铺 dist/（前端资源），打包脚�
 | 文件 | 职责 |
 | --- | --- |
 | `build.rs` | 编译期本地化：发现语言包、生成 `dist/`、`dist/locale.js`、`$OUT_DIR/i18n.rs` |
+| `src/ui_assets.rs` | 同一套产物生成逻辑的独立实现（供 `meow-text --export-ui` 与打包流程调用） |
 | `locales/*.toml` | 本地化资源（唯一需要改文案的地方；加文件即加语言） |
 | `src/meow.rs` | 纯判定逻辑（该不该喵、用哪个后缀、主题/关闭行为/语言枚举），带单测，不碰 Win32 |
 | `src/hook.rs` | 全局键盘钩子、前台进程识别、内容启发式、注入线程 |
