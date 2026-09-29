@@ -1,0 +1,110 @@
+# meow-text 的 CI。
+#
+# 为什么跑在 windows-latest 而不是 ubuntu-latest：
+# 这个程序**只能在 Windows 上编译和运行** —— 全局键盘钩子（WH_KEYBOARD_LL）、SendInput 注入、
+# IMM32 组词查询、注册表启动项都是 Win32 API，src/lib.rs 里还有一条 `compile_error!` 兜底。
+# （顺带一提，Tauri 在 Linux 上还要 webkit2gtk / glib 那一堆系统库，ubuntu 上会先在 glib-sys 挂掉。）
+#
+# 任务划分：
+#   check   —— fmt + clippy，几秒钟给出反馈
+#   test    —— cargo test：单测 + 本地化检查 + 端到端键盘钩子测试
+#   bundle  —— 只在打 v* tag 时跑，出 exe + MSI/NSIS 安装包并挂到 Release
+
+name: CI
+
+on:
+  push:
+    branches: ["master"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: fmt + clippy
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # 工具链由 rust-toolchain.toml 决定（nightly + rust-src / rustfmt / clippy）
+      - name: 安装工具链
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # nightly 的日期版本不进缓存 key，否则每天都要全量重编一遍
+          key: ${{ runner.os }}-check
+
+      - name: 格式检查（行宽由 rustfmt.toml 定成 120）
+        run: cargo fmt --all -- --check
+
+      - name: Clippy（警告当错误）
+        run: cargo clippy --all-targets -- -D warnings
+
+  test:
+    name: cargo test
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 安装工具链
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-test
+
+      # 一步到位：编译（tauri-build 的资源生成 + build.rs 的本地化产物）并跑全部测试
+      - name: 跑测试
+        run: cargo test --verbose
+
+      # 端到端那个测试要抢前台焦点。托管 runner 的窗口站不一定允许，
+      # 抢不到时测试自己会打印 SKIP 并跳过（不会假红）。
+      - name: 失败时补一份带输出的日志
+        if: failure()
+        run: cargo test --verbose -- --nocapture
+
+  bundle:
+    name: 打包（仅 tag）
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [check, test]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 安装工具链
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-bundle
+
+      # tauri-action：跑 `tauri build` + 建 Release + 上传 exe / MSI / NSIS 安装包
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: .
+          tagName: ${{ github.ref_name }}
+          releaseName: "meow-text ${{ github.ref_name }}"
+          releaseDraft: true
+          prerelease: false
+          generateReleaseNotes: true
+          args: --verbose

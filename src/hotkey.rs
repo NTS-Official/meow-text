@@ -132,9 +132,7 @@ pub fn parse(text: &str) -> Option<(Vec<&'static str>, &'static str)> {
             continue;
         }
         // 主键只认已知的名字（`f1`、`space`、`'` …）
-        let Some((name, _)) = KEYS.iter().find(|(name, _)| *name == part) else {
-            return None;
-        };
+        let (name, _) = KEYS.iter().find(|(name, _)| *name == part)?;
         if key.is_some() {
             return None; // 两个主键
         }

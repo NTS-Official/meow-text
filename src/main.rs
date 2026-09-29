@@ -17,7 +17,6 @@ fn main() {
     // `--hidden` 由注册表里的开机启动项使用（见 src/autostart.rs）：
     // 登录后静默起来，只留托盘图标，不弹面板。
     meow_text_lib::run();
-    return;
 }
 
 /// release 构建是 windows 子系统（平时没有控制台），`--probe` 时借一下父进程的控制台好打印状态。

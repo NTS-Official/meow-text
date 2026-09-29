@@ -134,8 +134,8 @@ mod imp {
             return None;
         }
 
+        // 缓冲区按 UTF-16 码元算（size 是字节数，含结尾的 0）
         let mut buffer = vec![0u16; (size as usize).div_ceil(2)];
-        let mut size = size;
         let status = unsafe {
             RegGetValueW(
                 HKEY_CURRENT_USER,

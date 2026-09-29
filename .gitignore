@@ -1,4 +1,5 @@
 /target
-/gen/schemas
+# tauri 生成的 schema；gen/ 下也可能有本地调试用的临时目录
+/gen/
 # 由 build.rs 从 ui/ + locales/ 生成
 /dist

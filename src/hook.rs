@@ -283,13 +283,11 @@ fn process_name_of(pid: u32) -> Option<String> {
 /// 前台窗口的进程名（小写），带一层缓存。
 pub fn process_of_window(hwnd: HWND) -> Option<String> {
     let key = hwnd.0 as isize;
-    if let Ok(cache) = PROC_CACHE.lock() {
-        if let Some((cached_key, name)) = cache.as_ref() {
-            if *cached_key == key {
+    if let Ok(cache) = PROC_CACHE.lock()
+        && let Some((cached_key, name)) = cache.as_ref()
+            && *cached_key == key {
                 return name.clone();
             }
-        }
-    }
 
     let mut pid = 0u32;
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };

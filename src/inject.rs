@@ -128,8 +128,8 @@ fn clipboard_text() -> Option<String> {
             return None;
         }
         let mut out = None;
-        if IsClipboardFormatAvailable(CF_UNICODETEXT.0 as u32).is_ok() {
-            if let Ok(handle) = GetClipboardData(CF_UNICODETEXT.0 as u32) {
+        if IsClipboardFormatAvailable(CF_UNICODETEXT.0 as u32).is_ok()
+            && let Ok(handle) = GetClipboardData(CF_UNICODETEXT.0 as u32) {
                 let hglobal = HGLOBAL(handle.0);
                 let ptr = GlobalLock(hglobal);
                 if !ptr.is_null() {
@@ -142,7 +142,6 @@ fn clipboard_text() -> Option<String> {
                     let _ = GlobalUnlock(hglobal);
                 }
             }
-        }
         let _ = CloseClipboard();
         out
     }

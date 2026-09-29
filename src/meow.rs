@@ -370,11 +370,10 @@ pub fn decide(cfg: &Config, ev: &KeyEvent<'_>, accept_injected: bool) -> Decisio
         scenario.map(|s| s.name.clone())
     };
 
-    if let Some(s) = scenario {
-        if !s.enabled {
+    if let Some(s) = scenario
+        && !s.enabled {
             return skip(SkipReason::ScenarioDisabled, scenario_name);
         }
-    }
 
     let trigger = scenario.map(|s| s.trigger_or(cfg.trigger)).unwrap_or(cfg.trigger);
     if !trigger.matches(ev.ctrl_down) {
