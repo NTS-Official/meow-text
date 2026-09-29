@@ -574,16 +574,10 @@ pub fn export_ui() -> Result<(), String> {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let (keys, locales) = ui_assets::load_locales(&root.join("locales"))?;
 
-    // 首屏语言：和 build.rs 一样，`MEOW_LOCALE` 优先，否则跟随系统。
-    // 构建脚本还会通过 `MEOW_UI_DEFAULT_LOCALE` 把它自己挑中的语言告诉我们 ——
-    // CI 的 runner 是英文系统，没有这一条就会和程序里的兜底语言对不上。
-    let hint = std::env::var("MEOW_LOCALE")
-        .ok()
-        .filter(|value| !value.trim().is_empty())
-        .or_else(|| option_env!("MEOW_UI_DEFAULT_LOCALE").map(str::to_string))
-        .unwrap_or_else(|| i18n::system_tag().to_string());
-    let default = ui_assets::pick_default(locales.iter().map(|(tag, _)| tag.as_str()), &hint)
-        .ok_or_else(|| "挑不出默认语言".to_string())?;
+    // 首屏语言就用本次编译挑好的那个（build.rs 写在生成物里的 DEFAULT_LOCALE）：
+    // 这样 `--export-ui` 铺出来的 dist/ 和程序里的兜底语言**必然**一致。
+    // 想换首屏语言，就带 `MEOW_LOCALE=xx-YY` 重新编译一次。
+    let default = i18n::DEFAULT_TAG.to_string();
 
     ui_assets::export(&root, &default, &keys, &locales)?;
 

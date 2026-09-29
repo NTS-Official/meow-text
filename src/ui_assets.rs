@@ -349,19 +349,16 @@ mod tests {
         let root = root();
 
         let (keys, locales) = load_locales(&root.join("locales")).expect("读语言包失败");
-        // 用编译时的默认语言，和 build.rs 挑的那个保持一致
-        let default = pick_default(
-            locales.iter().map(|(tag, _)| tag.as_str()),
-            option_env!("MEOW_UI_DEFAULT_LOCALE").unwrap_or("zh-CN"),
-        )
-        .expect("挑默认语言失败");
+        // 用本次编译的默认语言（build.rs 挑的那个），不从环境变量猜：
+        // CI 上测试进程的环境和 build script 的环境不一定一样。
+        let default = crate::i18n::DEFAULT_TAG;
 
         // 生成到临时目录（把 ui/ 一起拷过去，export 是从 <root>/ui 读的）
         let scratch = std::env::temp_dir().join("meow-export-ui-check");
         let _ = std::fs::remove_dir_all(&scratch);
         std::fs::create_dir_all(&scratch).unwrap();
         copy_dir(&root.join("ui"), &scratch.join("ui"));
-        export(&scratch, &default, &keys, &locales).expect("导出失败");
+        export(&scratch, default, &keys, &locales).expect("导出失败");
 
         // dist/：ui/ 里的每个文件 + 生成出来的 locale.js
         let mut names: Vec<String> = std::fs::read_dir(root.join("ui"))
@@ -394,7 +391,7 @@ mod tests {
         let i18n_committed = root.join("gen").join("i18n.rs");
         if i18n_committed.exists() {
             let produced = scratch.join("i18n.rs");
-            write_rust_module(&produced, &default, &keys, &locales).expect("生成 i18n.rs 失败");
+            write_rust_module(&produced, default, &keys, &locales).expect("生成 i18n.rs 失败");
             let expected = std::fs::read_to_string(&i18n_committed).unwrap();
             let actual = std::fs::read_to_string(&produced).unwrap();
             assert_eq!(

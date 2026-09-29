@@ -23,6 +23,12 @@ pub struct Key(usize);
 
 include!(concat!(env!("OUT_DIR"), "/i18n.rs"));
 
+/// 本次编译的默认语言标签（`build.rs` 挑的那个）。
+///
+/// `--export-ui` 和黄金文件测试都用它，免得又各自按环境变量猜一遍 ——
+/// CI 上测试进程的环境和 build script 的环境不一定一样（踩过这个坑）。
+pub const DEFAULT_TAG: &str = DEFAULT_LOCALE;
+
 /// 当前语言在 `LOCALES` 里的下标；`usize::MAX` 表示还没选过（用编译默认语言）。
 static CURRENT: AtomicUsize = AtomicUsize::new(usize::MAX);
 
