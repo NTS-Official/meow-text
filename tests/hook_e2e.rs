@@ -165,6 +165,11 @@ fn hook_pipeline_fires_only_when_input_box_has_content() {
     let hwnd = create_edit_window();
     if !force_foreground(hwnd) {
         println!("[e2e] SKIP：抢不到前台焦点（当前前台是别的窗口），未运行端到端断言");
+        // CI 日志里「跳过」和「跑过」都是 PASS，这里补一条 annotation，
+        // 免得看到绿灯就以为注入链路真的在那个环境里验证过了。
+        if std::env::var_os("CI").is_some() {
+            println!("::warning title=e2e 被跳过::抢不到前台焦点，这次没有真正验证注入链路");
+        }
         unsafe {
             let _ = DestroyWindow(hwnd);
         }
