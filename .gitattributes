@@ -1,0 +1,7 @@
+# 生成物要能逐字节比对，所以仓库里统一用 LF（Windows 上 git 默认会把文本检成 CRLF，
+# 黄金文件测试已经按行尾归一化处理，这里再钉一下，免得每次提交都刷一堆行尾警告）。
+* text=auto eol=lf
+
+# 二进制资源别动
+*.ico binary
+*.png binary
